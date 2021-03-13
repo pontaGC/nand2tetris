@@ -1,0 +1,174 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Math.jack
+
+/**
+ * A library of commonly used mathematical functions.
+ * Note: Jack compilers implement multiplication and division using OS method calls.
+ */
+class Math {
+
+    static int Bits;
+    static int Bits_2;
+    static Array TwoToThe; // TwoToThe[j] = 2^j
+
+    /** Initializes the library. */
+    function void init()
+    {
+	var int j;
+
+	let Bits = 16;
+	let Bits_2 = 8;
+ 	let TwoToThe = Array.new(Bits);
+	let TwoToThe[0] = 1;
+
+	let j = 1;
+	while(j < Bits)
+	{
+	   let TwoToThe[j] = TwoToThe[j-1] + TwoToThe[j-1];
+	   let j = j + 1;
+	}
+	
+	return;
+    }
+
+    // for other class
+    function int getTwoToThe(int j)
+    {
+       return TwoToThe[j];
+    }
+
+    /** Returns the absolute value of x. */
+    function int abs(int x)
+    {
+	if (x < 0)
+	{
+	   return -x;
+	}
+	
+	return x;
+    }    
+
+    /** Returns the product of x and y. 
+     *  When a Jack compiler detects the multiplication operator '*' in the 
+     *  program's code, it handles it by invoking this method. In other words,
+     *  the Jack expressions x*y and multiply(x,y) return the same value.
+     */
+    function int multiply(int x, int y)
+    {
+    	var int j;
+	var int sum, shiftedX;
+
+	let j = 0;
+	let sum = 0;
+	let shiftedX = x;
+
+	while(j < Bits)
+	{
+	    if (Math.bit(y, j))
+	    {
+		let sum = sum + shiftedX;
+	    }
+	    
+	    let shiftedX = shiftedX + shiftedX;
+	    let j = j + 1;
+	}
+
+	return sum;
+    }
+
+    /** Returns the integer part of x/y.
+     *  When a Jack compiler detects the multiplication operator '/' in the 
+     *  program's code, it handles it by invoking this method. In other words,
+     *  the Jack expressions x/y and divide(x,y) return the same value.
+     */
+    function int divide(int x, int y)
+    {
+        var int q, result;
+        var boolean isPositive;
+
+        let isPositive = ((x < 0) = (y < 0));
+        let x = Math.abs(x);
+        let y = Math.abs(y);
+
+        if (x < y)
+	{
+            return 0;
+        }
+	
+        let q = Math.divide(x, y+y);
+        if (x - (2 * q * y) < y)
+	{
+            let result = q + q;
+        }
+	else
+	{
+            let result = q + q + 1;
+        }
+
+        if (isPositive)
+	{
+            return result;
+        }
+	else
+	{
+            return -result;
+        }
+    }
+
+    /** Returns the integer part of the square root of x. */
+    function int sqrt(int x)
+    {
+    	var int y;
+	var int j, yj, yj2;
+
+	let y = 0;
+	let j = Bits_2 - 1;
+	while(~(j < 0))
+	{
+	   let yj = y + TwoToThe[j];
+	   let yj2 = yj * yj;
+	   
+	   if ((~(yj2 > x)) & (yj2 > 0))
+	   {
+		let y = yj;
+	   }
+
+	   let j = j - 1;
+	}
+
+	return y;
+    }
+
+    /** Returns the greater number. */
+    function int max(int a, int b)
+    {
+	if (a < b)
+	{
+	   return b;
+	}
+
+	return a;
+    }
+
+    /** Returns the smaller number. */
+    function int min(int a, int b)
+    {
+	if (a > b)
+	{
+	   return b;
+	}
+
+	return a;
+    }
+
+    /** Check j th bit of integer x.
+     *  If the j th bit of x is 1, return true,
+     *  otherwise, return false.
+     */
+    function boolean bit(int x, int j)
+    {
+	return x & TwoToThe[j] ;
+    }
+}	

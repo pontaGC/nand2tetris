@@ -1,0 +1,28 @@
+class Vector_2d {
+      
+      field int x, y;
+      
+      constructor Vector_2d new(int xinput, int yinput){
+          let x = xinput;
+	  let y = yinput;
+	  return this;      
+	}
+      
+
+      method void dispose(){
+      	     do Memory.deAlloc(this);
+	     return;
+	}
+
+
+      method int Length(){
+      	   var int x2, y2;
+      	   var int length2;
+
+	   let x2 = Math.multiply(x, x);
+	   let y2 = Math.multiply(y, y);
+
+	   return Math.sqrt(x2 + y2);
+	}
+
+}
