@@ -1,0 +1,15 @@
+class Main {
+   function void main() {
+   	var int x, y;
+	var Vector_2d vec;
+
+	let x = 3;
+	let y = 4;
+
+	let vec = Vector_2d.new(x, y);
+
+	do Output.printInt(vec.Length());
+
+   	return;
+   }
+}

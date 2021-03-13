@@ -1,0 +1,131 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Memory.jack
+
+/**
+ * This library provides two services: direct access to the computer's main
+ * memory (RAM), and allocation and recycling of memory blocks. The Hack RAM
+ * consists of 32,768 words, each holding a 16-bit binary number.
+ */ 
+class Memory {
+
+     static int HeapBase, HeapEnd, HeapLength;
+     static int Length, Next, BlockSize;
+     static Array memory, FreeList;     
+
+    /** Initializes the class. */
+    function void init()
+    {
+	let HeapBase = 2048;
+	let HeapEnd = 16383;
+	let HeapLength = HeapEnd - HeapBase + 1;
+
+	let memory = 0;
+
+	let Length = 0;
+	let Next = 1;
+	let BlockSize = -1;
+
+	let FreeList = HeapBase;
+	let FreeList[Length] = HeapLength;
+	let FreeList[Next] = null;	
+
+	return;
+    }
+
+    /** Returns the RAM value at the given address. */
+    function int peek(int address)
+    {
+	return memory[address];
+    }
+
+    /** Sets the RAM value at the given address to the given value. */
+    function void poke(int address, int value)
+    {
+       let memory[address] = value;
+       return;
+    }
+
+    /** Finds an available RAM block of the given size and returns
+     *  a reference to its base address. */
+    function int alloc(int size)
+    {
+	var Array bestfitBlock, allocatedBlock, nextBlock;
+
+	if (~(size > 0))
+	{
+	    return 1;
+	}
+
+	let bestfitBlock = Memory.findBestfitBlock(size);
+	if (bestfitBlock = null)
+	{
+	    return 1;
+	}
+
+        let allocatedBlock = bestfitBlock + bestfitBlock[Length] - size;
+        let allocatedBlock[BlockSize] = size + 1;
+	
+        let bestfitBlock[Length] = bestfitBlock[Length] - size - 1;
+
+	return allocatedBlock;
+    }
+
+    /** Return best-fit block. */
+    function Array findBestfitBlock(int size)
+    {
+	var int allocatingSize;
+	var int surplusSize, bestfitSize;
+	var Array currentBlock, bestfitBlock;
+
+	// add 1 for deallocation, add 2 for freeList
+	let allocatingSize = size + 1 + 2; 
+
+	let bestfitBlock = null;
+	let bestfitSize = HeapLength;
+	let currentBlock = FreeList;
+	
+	while(~(currentBlock = null))
+	{
+  	    let surplusSize = currentBlock[Length] - allocatingSize; 
+	    if (~(surplusSize < 0) & (surplusSize < bestfitSize)) 
+	    {
+		let bestfitSize = surplusSize;
+		let bestfitBlock = currentBlock;
+	    }
+
+	    let currentBlock = currentBlock[Next];
+	}
+
+	return bestfitBlock;
+    }
+
+    /** De-allocates the given object (cast as an array) by making
+     *  it available for future allocations. */
+    function void deAlloc(Array object)
+    {
+	var int reallocatingBlock;
+	var Array lastBlock;
+
+	let reallocatingBlock = object - 1;
+	let reallocatingBlock[Length] = object[BlockSize];
+
+	if (FreeList[Next] = null)
+	{
+	    let FreeList[Next] = reallocatingBlock;
+	    let reallocatingBlock[Next] = null;
+	    return;
+	}
+
+	let lastBlock = FreeList;
+	while(~(lastBlock[Next] = null))
+	{
+	    let lastBlock = lastBlock[Next];
+	}
+	let lastBlock = reallocatingBlock;
+	let lastBlock[Next] = null;
+
+	return;
+    }
+}
